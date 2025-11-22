@@ -107,7 +107,7 @@ def train_bot(cat_name, render: int = -1):
     # All the hyperparameters: alpha, gamma, epsilon, max_steps, minimum_epsilon
 
     #Learning rate
-    alpha = 0.8
+    alpha = 0.001
     #discount factor
     gamma = 0.95
     #start exploration rate (100% random actions)
