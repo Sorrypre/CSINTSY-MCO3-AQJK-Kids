@@ -8,7 +8,7 @@ from cat_env import make_env
 #############################################################################
 # TODO: YOU MAY ADD ADDITIONAL IMPORTS OR FUNCTIONS HERE.                   #
 #############################################################################
-
+from cat_env import CatChaseEnv
 
 #ignore may ganito na pala si sir HAHAHAHA
 # def get_next_state(state: int, action: int):
@@ -46,9 +46,9 @@ def is_goal_state(state):
         isGoalState = True
     return isGoalState
 
-def get_action(state: int, epsilon: float, q_table: Dict[int, np.ndarray]):
+def get_action(env: CatChaseEnv, state: int, epsilon: float, q_table: Dict[int, np.ndarray]):
     if np.random.random() < epsilon:
-        return random.randint(0,3)
+        return env.action_space.sample()
     else:
         return int(np.argmax(q_table[state]))
 
@@ -145,7 +145,7 @@ def train_bot(cat_name, render: int = -1):
     
         while not done:
             #step 2 
-            action = get_action(state, epsilon, q_table)
+            action = get_action(env, state, epsilon, q_table)
             #step 3
             next_state, reward, terminated, truncated, info = env.step(action)
             #step 4
