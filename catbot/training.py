@@ -10,33 +10,34 @@ from cat_env import make_env
 #############################################################################
 
 
-def get_next_state(state: int, action: int):
+#ignore may ganito na pala si sir HAHAHAHA
+# def get_next_state(state: int, action: int):
 
-    #Move up if the action is 0
-    #Check if the current state is within bounds of the map it must be greater than zero
-    #moving up means the row value gets lesser (Ex. 1000 -> 0000)
-    if action == 0 and state // 1000 > 0:
-        state -= 1000
-    #Move down if the action is 1
-    #Check if the current state is within bounds of the map it must be less than 7 (max coordinate we can have)
-    #moving up means the row value gets lesser (Ex. 1000 -> 2000)
-    elif action == 1 and state // 1000 < 7:
-        state += 1000
-    #Move up if the action is 2
-    #Check if the current state is within bounds of the map it must be greater than zero
-    #moving up means the row value gets lesser (Ex. 7120 -> 7020)
-    elif action == 2 and (state // 100) % 10 > 0:
-        state -= 100
-    #Move down if the action is 3
-    #Check if the current state is within bounds of the map it must be less than 7 (max coordinate we can have)
-    #moving up means the row value gets lesser (Ex. 7120 -> 7220)
-    elif action == 3 and (state // 100) % 10 < 7:
-        state += 100
-    # does not move so everything stays the same
-    elif action == 4:
-        state = state
-    else: print("State or action not within bounds")
-    return state
+#     #Move up if the action is 0
+#     #Check if the current state is within bounds of the map it must be greater than zero
+#     #moving up means the row value gets lesser (Ex. 1000 -> 0000)
+#     if action == 0 and state // 1000 > 0:
+#         state -= 1000
+#     #Move down if the action is 1
+#     #Check if the current state is within bounds of the map it must be less than 7 (max coordinate we can have)
+#     #moving up means the row value gets lesser (Ex. 1000 -> 2000)
+#     elif action == 1 and state // 1000 < 7:
+#         state += 1000
+#     #Move up if the action is 2
+#     #Check if the current state is within bounds of the map it must be greater than zero
+#     #moving up means the row value gets lesser (Ex. 7120 -> 7020)
+#     elif action == 2 and (state // 100) % 10 > 0:
+#         state -= 100
+#     #Move down if the action is 3
+#     #Check if the current state is within bounds of the map it must be less than 7 (max coordinate we can have)
+#     #moving up means the row value gets lesser (Ex. 7120 -> 7220)
+#     elif action == 3 and (state // 100) % 10 < 7:
+#         state += 100
+#     # does not move so everything stays the same
+#     elif action == 4:
+#         state = state
+#     else: print("State or action not within bounds")
+#     return state
 
 #Note ni Jens: make sure to only put valid states kasi for now di pa nachecheck 8888 for example should not b
 def is_goal_state(state):
@@ -45,7 +46,37 @@ def is_goal_state(state):
         isGoalState = True
     return isGoalState
 
+def get_action(state: int, epsilon: float, q_table: Dict[int, np.ndarray]):
+    if np.random.random() < epsilon:
+        return random.randint(0,3)
+    else:
+        return int(np.argmax(q_table[state]))
 
+def decay_epsilon(start_epsilon, end_epsilon, epsilon_decay):
+    return max(end_epsilon, (start_epsilon - epsilon_decay))
+
+#simple reward structure muna na naisip ko lng based sa reference HAHAHA - jens
+#pwede raw maglagay ng additional rito dagdagan na lng
+def getReward(state: int):
+    if is_goal_state(state):
+        return 1.0
+    else:
+        return 0.0
+def update(q_table: Dict[int, np.ndarray], learning_rate: float, discount_factor: float, state: int, action: int, reward: float, terminated: bool, next_state: int):
+    #best na pwede gawin mula sa susunod na state
+    future_q_value = (not terminated) * np.max(q_table[next_state])
+    
+    #Q-value (Bellman equation)
+    target = reward + discount_factor * future_q_value
+
+    #Gaano kamali yung estimate
+    temporal_diff = target - q_table[state][action]
+
+    # return the updated estimate in the direction of the error
+    # learning rate para macontrol yung gaano kalaki yung steps sa pagadjust
+    # also multiple assignment para sa training_error
+    q_table[state][action] += learning_rate * temporal_diff
+    return q_table, temporal_diff
 
 
 
@@ -79,18 +110,18 @@ def train_bot(cat_name, render: int = -1):
     alpha = 0.8
     #discount factor
     gamma = 0.95
-    #exploration rate
-    epsilon = 0.2
+    #start exploration rate (100% random actions)
+    epsilon = 1.0
+    #final exploreation rate (close to zero)
+    end_epsilon = 0.1
+    #Reducing the exploration over time
+    epsilon_decay = epsilon / (episodes / 2)
     #maximum steps the bot can take
     max_steps = 60
 
-
-
-
-
-
-
-
+    #naka define na pala yung env sa function bruh
+    #episodes already defined
+    training_error = []
 
     
     #############################################################################
@@ -108,38 +139,26 @@ def train_bot(cat_name, render: int = -1):
         # 4. Since this environment doesn't give rewards, compute reward manually    #
         # 5. Update the Q-table accordingly based on agent's rewards.                #
         ############################################################################## 
-        
+        #done step 1
+        state, info = env.reset()
+        done = False
+    
+        while not done:
+            #step 2 
+            action = get_action(state, epsilon, q_table)
+            #step 3
+            next_state, reward, terminated, truncated, info = env.step(action)
+            #step 4
+            reward = getReward(next_state)
+            #step 5
+            q_table, temporal_difference = update(q_table, alpha, gamma, state, action, reward, terminated, next_state)
+            training_error.append(temporal_difference)
 
 
+            done = terminated or truncated
+            state = next_state
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
+        epsilon = decay_epsilon(epsilon, end_epsilon, epsilon_decay)
         
         #############################################################################
         # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
