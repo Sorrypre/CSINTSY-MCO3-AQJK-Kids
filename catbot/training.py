@@ -1,3 +1,5 @@
+import os
+
 import random
 import time
 from typing import Dict
@@ -53,7 +55,10 @@ def get_action(env: CatChaseEnv, state: int, epsilon: float, q_table: Dict[int, 
         return int(np.argmax(q_table[state]))
 
 def decay_epsilon(start_epsilon, end_epsilon, epsilon_decay):
-    return max(end_epsilon, (start_epsilon - epsilon_decay))
+    return max(end_epsilon, (start_epsilon * epsilon_decay))
+    
+def decay_alpha_epsilon(epsilon, alpha, min_epsilon, min_alpha, epsilon_decay, alpha_decay):
+    return max(min_epsilon, epsilon * epsilon_decay), max(min_alpha, alpha * alpha_decay)
 
 #simple reward structure muna na naisip ko lng based sa reference HAHAHA - jens
 #pwede raw maglagay ng additional rito dagdagan na lng
@@ -107,18 +112,26 @@ def train_bot(cat_name, render: int = -1):
     # All the hyperparameters: alpha, gamma, epsilon, max_steps, minimum_epsilon
 
     #Learning rate
-    alpha = 0.001
+    alpha = 0.1
+    end_alpha = 0.005
     #discount factor
     gamma = 0.95
     #start exploration rate (100% random actions)
     epsilon = 1.0
-    #final exploreation rate (close to zero)
-    end_epsilon = 0.1
+    end_epsilon = 0.05
+    #final exploreation rate (close to zero)    
     #Reducing the exploration over time
-    epsilon_decay = epsilon / (episodes / 2)
+    # cinompute ko via x^3500 = 0.1
+    # So meron syang 3500 episodes to test out moves,
+    # and then 1500 para magdry run ng kinalabasan ng training nya
+    epsilon_decay = 0.9993
+    # cinompute ko via x^2500 = 0.005
+    # para fast learner muna sya sa una tapos saka na sya maging
+    # diskumpyado sa pagbabago pag matalino na talaga sya
+    alpha_decay = 0.9979
     #maximum steps the bot can take
     max_steps = 60
-
+    
     #naka define na pala yung env sa function bruh
     #episodes already defined
     training_error = []
@@ -142,6 +155,7 @@ def train_bot(cat_name, render: int = -1):
         #done step 1
         state, info = env.reset()
         done = False
+        moves = 0
     
         while not done:
             #step 2 
@@ -153,12 +167,13 @@ def train_bot(cat_name, render: int = -1):
             #step 5
             q_table, temporal_difference = update(q_table, alpha, gamma, state, action, reward, terminated, next_state)
             training_error.append(temporal_difference)
-
+            
+            moves += 1
 
             done = terminated or truncated
             state = next_state
 
-        epsilon = decay_epsilon(epsilon, end_epsilon, epsilon_decay)
+        epsilon, alpha = decay_alpha_epsilon(epsilon, alpha, end_epsilon, end_alpha, epsilon_decay, alpha_decay)
         
         #############################################################################
         # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
@@ -166,8 +181,9 @@ def train_bot(cat_name, render: int = -1):
 
         # If rendering is enabled, play an episode every 'render' episodes
         if render != -1 and (ep == 1 or ep % render == 0):
+            print(moves)
             viz_env = make_env(cat_type=cat_name)
-            play_q_table(viz_env, q_table, max_steps=100, move_delay=0.02, window_title=f"{cat_name}: Training Episode {ep}/{episodes}")
+            play_q_table(viz_env, q_table, max_steps=60, move_delay=0.02, window_title=f"{cat_name}: Training Episode {ep}/{episodes}")
             print('episode', ep)
 
     return q_table
