@@ -262,14 +262,32 @@ class TrainerCat(Cat):
         return "images/trainer-dp.png"
     
     def move(self) -> None:
-        # Students can implement their own cat behavior here
-        # This is a dummy implementation that stays still
-        # You can:
-        # 1. Access player information (position, last action)
-        # 2. Check distances
-        # 3. Implement your own movement strategy
-        # 4. Test different learning algorithms
-        return
+        
+        #if random.random() <= 0.04: # 4% screw up rate for fairness
+        #   return
+        
+        possible_moves = [[0, 1], [0, -1], [1, 0], [-1, 0]]
+        possible_moves.append([random.randint(-5, 5),random.randint(-5, 5)])
+        
+        best_move = self.pos
+        max_dist = -1
+        
+        # Shuffle moves to break ties randomly (prevents infinite loop stuckness)
+        np.random.shuffle(possible_moves)
+
+        for move in possible_moves:
+            new_pos = self.pos + np.array(move)
+            
+            # Check boundaries
+            if (0 <= new_pos[0] < self.grid_size) and (0 <= new_pos[1] < self.grid_size):
+                # Calculate Manhattan distance to player from this hypothetical spot
+                dist = abs(new_pos[0] - self.player_pos[0]) + abs(new_pos[1] - self.player_pos[1])
+                
+                if dist > max_dist:
+                    max_dist = dist
+                    best_move = new_pos
+
+        self.pos = best_move
 
 #######################################
 # END OF CAT BEHAVIOR IMPLEMENTATIONS #
