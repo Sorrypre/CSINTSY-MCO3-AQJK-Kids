@@ -136,7 +136,7 @@ def train_bot(cat_name, render: int = -1):
     
     #naka define na pala yung env sa function bruh
     #episodes already defined
-    training_error = []
+    #training_error = []
     last_num_moves = 0
     start_time = time.perf_counter()
     
@@ -171,7 +171,7 @@ def train_bot(cat_name, render: int = -1):
             reward = getReward(next_state, moves)
             #step 5
             q_table, temporal_difference = update(q_table, alpha, gamma, state, action, reward, terminated, next_state)
-            training_error.append(temporal_difference)
+            #training_error.append(temporal_difference)
 
             done = terminated or truncated
             state = next_state
@@ -191,5 +191,5 @@ def train_bot(cat_name, render: int = -1):
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
     print(f"Last episode no. moves: {last_num_moves}")
-    print(f"Total Training time: {elapsed_time: .3f}")
+    print(f"Total Training time: {elapsed_time:.3f}")
     return q_table
