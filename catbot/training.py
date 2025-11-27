@@ -42,10 +42,13 @@ from cat_env import CatChaseEnv
 
 #Note ni Jens: make sure to only put valid states kasi for now di pa nachecheck 8888 for example should not b
 def is_goal_state(state):
+    return (state // 100) == (state % 100)
+    """
     isGoalState = False
     if (state // 100) == (state % 100):
         isGoalState = True
     return isGoalState
+    """
 
 def get_action(env: CatChaseEnv, state: int, epsilon: float, q_table: Dict[int, np.ndarray]):
     if np.random.random() < epsilon:
@@ -59,7 +62,7 @@ def decay_alpha_epsilon(epsilon, alpha, min_epsilon, min_alpha, epsilon_decay, a
 #simple reward structure muna na naisip ko lng based sa reference HAHAHA - jens
 #pwede raw maglagay ng additional rito dagdagan na lng
 def getReward(state: int, moves: int):
-    return 60.0 / max(1, moves) if is_goal_state(state) else 0.0
+    return 60.0 / (max(1, moves) * 2) if is_goal_state(state) else 0.0
 
 def update(q_table: Dict[int, np.ndarray], learning_rate: float, discount_factor: float, state: int, action: int, reward: float, terminated: bool, next_state: int):
     #best na pwede gawin mula sa susunod na state
@@ -164,7 +167,7 @@ def train_bot(cat_name, render: int = -1):
             next_state, reward, terminated, truncated, info = env.step(action)
             #step 4
             moves += 1
-            truncated = (moves >= 60 * 15)
+            truncated = (moves >= max_steps * 15)
             reward = getReward(next_state, moves)
             #step 5
             q_table, temporal_difference = update(q_table, alpha, gamma, state, action, reward, terminated, next_state)
