@@ -105,7 +105,7 @@ def train_bot(cat_name, render: int = -1):
     #Learning rate
     alpha = 0.05
     end_alpha = 0.005
-    alpha_decay_until_episode = 2000
+    alpha_decay_until_episode = 3000
     #discount factor
     gamma = 0.95
     #start exploration rate (100% random actions)
@@ -134,7 +134,8 @@ def train_bot(cat_name, render: int = -1):
     #naka define na pala yung env sa function bruh
     #episodes already defined
     training_error = []
-
+    last_num_moves = 0
+    start_time = time.perf_counter()
     
     #############################################################################
     # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
@@ -183,5 +184,9 @@ def train_bot(cat_name, render: int = -1):
             viz_env = make_env(cat_type=cat_name)
             play_q_table(viz_env, q_table, max_steps=max_steps, move_delay=0.02, window_title=f"{cat_name}: Training Episode {ep}/{episodes}")
             print('episode', ep)
-
+        last_num_moves = moves
+    end_time = time.perf_counter()
+    elapsed_time = end_time - start_time
+    print(f"Last episode no. moves: {last_num_moves}")
+    print(f"Total Training time: {elapsed_time: .3f}")
     return q_table
