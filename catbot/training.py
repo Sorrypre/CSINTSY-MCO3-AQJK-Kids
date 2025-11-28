@@ -113,7 +113,7 @@ def train_bot(cat_name, render: int = -1):
     gamma = 0.95
     #start exploration rate (100% random actions)
     epsilon = 1.0
-    end_epsilon = 0.05
+    end_epsilon = 0.1
     epsilon_decay_until_episode = 3500
     #final exploreation rate (close to zero)    
     #Reducing the exploration over time
