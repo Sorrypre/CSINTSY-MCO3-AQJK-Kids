@@ -171,7 +171,7 @@ def train_bot(cat_name, render: int = -1):
             reward = getReward(next_state, moves)
             #step 5
             q_table, temporal_difference = update(q_table, alpha, gamma, state, action, reward, terminated, next_state)
-            training_error.append(temporal_difference)
+            #training_error.append(temporal_difference)
 
             done = terminated or truncated
             state = next_state
